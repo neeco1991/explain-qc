@@ -129,6 +129,8 @@
 	}
 
 	function detachDragListeners() {
+		if (!browser) return;
+
 		window.removeEventListener('pointermove', handlePointerMove);
 		window.removeEventListener('pointerup', handlePointerEnd);
 		window.removeEventListener('pointercancel', handlePointerEnd);
@@ -158,6 +160,18 @@
 		detachDragListeners();
 
 		snapToBit(currentAngle <= 0 ? 0 : 1);
+	}
+
+	function handleHandleKeydown(event: KeyboardEvent) {
+		if (event.key === 'ArrowLeft' || event.key === '0') {
+			event.preventDefault();
+			snapToBit(0);
+		}
+
+		if (event.key === 'ArrowRight' || event.key === '1') {
+			event.preventDefault();
+			snapToBit(1);
+		}
 	}
 </script>
 
@@ -273,8 +287,15 @@
 						cy="62"
 						r="15"
 						class="cursor-grab fill-background stroke-foreground/70 touch-none"
+						role="slider"
+						tabindex="0"
+						aria-label="Bit direction"
+						aria-valuemin="0"
+						aria-valuemax="1"
+						aria-valuenow={selectedBit ?? undefined}
 						stroke-width="2"
 						onpointerdown={beginDrag}
+						onkeydown={handleHandleKeydown}
 					/>
 					<circle cx="260" cy="62" r="4" class="fill-foreground/70 pointer-events-none" />
 				</g>
