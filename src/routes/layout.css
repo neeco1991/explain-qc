@@ -123,15 +123,18 @@
 	* {
 		@apply border-border outline-ring/50;
 	}
+	html {
+		@apply font-sans;
+		min-height: 100dvh;
+		overflow: hidden;
+	}
 	body {
 		@apply bg-background text-foreground;
 		background-image:
 			radial-gradient(circle at top center, rgba(255, 255, 255, 0.22), transparent 40%),
 			linear-gradient(180deg, #fff78a 0%, #fff47a 58%, #fff169 100%);
 		background-color: #fff78a;
-		min-height: 100vh;
-	}
-	html {
-		@apply font-sans;
+		min-height: 100dvh;
+		overflow: hidden;
 	}
 }

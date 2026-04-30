@@ -1,29 +1,34 @@
 <script lang="ts">
-	import RegistersInteraction from '$lib/components/registers-interaction.svelte';
+	import QubitInteraction from '$lib/components/qubit-interaction.svelte';
 	import JourneyShell from '$lib/components/journey-shell.svelte';
 	import { buildJourneySteps } from '$lib/content/journey';
 
-	const journeySteps = buildJourneySteps('02', 2);
+	const journeySteps = buildJourneySteps('03', 3);
+
+	let qubitDirection = $state(100);
 </script>
 
 <svelte:head>
-	<title>Explain QC | Registers</title>
+	<title>Explain QC | Qubit</title>
 	<meta
 		name="description"
-		content="Dedicated second page explaining how several bits form a register."
+		content="Dedicated third page explaining a qubit with an interactive Bloch sphere."
 	/>
 </svelte:head>
 
 <JourneyShell
-	title="from one bit to many bits"
-	description="A register is just several bits placed side by side. Each position is still a clean 0 or 1, but together they can represent a much larger set of exact patterns."
+	title="What's a qubit?"
+	subtitle="Drag the arrow anywhere inside the sphere to point the qubit in a new direction."
 	steps={journeySteps}
-	wide={true}
 >
-	<RegistersInteraction />
+	<QubitInteraction bind:direction={qubitDirection} />
 
-	{#snippet footer()}
-		A classical register does not become fuzzy when it grows. It simply gives the computer more
-		room to store one exact binary pattern at a time.
+	{#snippet formula()}
+		state direction: <span class="font-extrabold text-foreground">{qubitDirection}%</span>
+	{/snippet}
+
+	{#snippet paragraph()}
+		Move the arrow around the sphere. Unlike a classical bit, the qubit is not limited to only
+		the two side positions before it is measured.
 	{/snippet}
 </JourneyShell>

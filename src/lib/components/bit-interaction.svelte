@@ -72,7 +72,7 @@
 
 		const rect = dragSurface.getBoundingClientRect();
 		const pivotX = rect.left + rect.width * 0.5;
-		const pivotY = rect.top + rect.height * 0.8125;
+		const pivotY = rect.top + rect.height * 0.5;
 		const dx = clientX - pivotX;
 		const dy = clientY - pivotY;
 		const angle = (Math.atan2(dx, Math.max(Math.abs(dy), 1)) * 180) / Math.PI;
@@ -136,84 +136,113 @@
 	}
 </script>
 
-<div
-	bind:this={dragSurface}
-	class="relative mx-auto aspect-[13/8] w-full max-w-4xl select-none"
-	style="touch-action: none;"
->
-	<button
-		type="button"
-		class={`absolute top-[81.25%] left-[4.75%] z-30 -translate-x-1/2 -translate-y-1/2 cursor-pointer text-5xl font-semibold transition sm:text-6xl ${
-			value === 0 ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-		}`}
-		onclick={() => snapToBit(0)}
+<div class="interaction-frame mx-auto w-full">
+	<div
+		class="flex w-full items-center justify-center gap-3 sm:gap-5"
+		style="touch-action: none;"
 	>
-		0
-	</button>
+		<button
+			type="button"
+			class={`shrink-0 cursor-pointer text-5xl font-semibold transition sm:text-6xl ${
+				value === 0 ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+			}`}
+			onpointerdown={() => snapToBit(0)}
+			onclick={() => snapToBit(0)}
+		>
+			0
+		</button>
 
-	<button
-		type="button"
-		class={`absolute top-[81.25%] left-[95.25%] z-30 -translate-x-1/2 -translate-y-1/2 cursor-pointer text-5xl font-semibold transition sm:text-6xl ${
-			value === 1 ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-		}`}
-		onclick={() => snapToBit(1)}
-	>
-		1
-	</button>
+		<div
+			bind:this={dragSurface}
+			class="interaction-stage relative aspect-square min-w-0 flex-1 select-none"
+		>
+			<svg viewBox="0 0 520 520" class="absolute inset-0 z-10 h-full w-full overflow-visible">
+				<path
+					d="M 62 260 A 198 198 0 0 1 458 260"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.5"
+					class="pointer-events-none text-foreground/28"
+					stroke-dasharray="6 8"
+				/>
+				<circle cx="62" cy="260" r="5" class="pointer-events-none fill-foreground/24" />
+				<circle cx="458" cy="260" r="5" class="pointer-events-none fill-foreground/24" />
 
-	<svg viewBox="0 0 520 320" class="absolute inset-0 z-10 h-full w-full overflow-visible">
-		<path
-			d="M 62 260 A 198 198 0 0 1 458 260"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="1.5"
-			class="pointer-events-none text-foreground/28"
-			stroke-dasharray="6 8"
-		/>
-		<circle cx="62" cy="260" r="5" class="pointer-events-none fill-foreground/24" />
-		<circle cx="458" cy="260" r="5" class="pointer-events-none fill-foreground/24" />
+				<g bind:this={needle}>
+					<circle
+						bind:this={dragHandle}
+						cx="260"
+						cy="62"
+						r="24"
+						class={`${dragging ? 'cursor-grabbing' : 'cursor-grab'} fill-transparent pointer-events-auto`}
+						pointer-events="all"
+						role="slider"
+						tabindex="0"
+						aria-label="Bit direction"
+						aria-valuemin="0"
+						aria-valuemax="1"
+						aria-valuenow={value ?? undefined}
+						stroke="transparent"
+						stroke-width="0"
+						style="touch-action: none;"
+						onpointerdown={beginDrag}
+						onkeydown={handleHandleKeydown}
+					/>
+					<circle
+						cx="260"
+						cy="62"
+						r="13"
+						class="pointer-events-none fill-background stroke-foreground/70"
+						stroke-width="2"
+					/>
+					<circle cx="260" cy="62" r="4" class="pointer-events-none fill-foreground/70" />
+					<line
+						x1="260"
+						y1="260"
+						x2="260"
+						y2="92"
+						stroke="currentColor"
+						stroke-width="4"
+						stroke-linecap="round"
+						class="pointer-events-none text-foreground"
+					/>
+					<polygon points="260,62 246,96 274,96" class="pointer-events-none fill-foreground" />
+				</g>
 
-		<g bind:this={needle}>
-			<circle
-				bind:this={dragHandle}
-				cx="260"
-				cy="62"
-				r="24"
-				class={`${dragging ? 'cursor-grabbing' : 'cursor-grab'} fill-transparent pointer-events-auto`}
-				pointer-events="all"
-				role="slider"
-				tabindex="0"
-				aria-label="Bit direction"
-				aria-valuemin="0"
-				aria-valuemax="1"
-				aria-valuenow={value ?? undefined}
-				stroke="transparent"
-				stroke-width="0"
-				style="touch-action: none;"
-				onpointerdown={beginDrag}
-				onkeydown={handleHandleKeydown}
-			/>
-			<circle
-				cx="260"
-				cy="62"
-				r="13"
-				class="pointer-events-none fill-background stroke-foreground/70"
-				stroke-width="2"
-			/>
-			<circle cx="260" cy="62" r="4" class="pointer-events-none fill-foreground/70" />
-			<line
-				x1="260"
-				y1="260"
-				x2="260"
-				y2="92"
-				stroke="currentColor"
-				stroke-width="4"
-				stroke-linecap="round"
-				class="pointer-events-none text-foreground"
-			/>
-			<polygon points="260,62 246,96 274,96" class="pointer-events-none fill-foreground" />
-		</g>
+				<circle cx="260" cy="260" r="8" class="pointer-events-none fill-foreground" />
+			</svg>
+		</div>
 
-		<circle cx="260" cy="260" r="8" class="pointer-events-none fill-foreground" />
-	</svg>
+		<button
+			type="button"
+			class={`shrink-0 cursor-pointer text-5xl font-semibold transition sm:text-6xl ${
+				value === 1 ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+			}`}
+			onpointerdown={() => snapToBit(1)}
+			onclick={() => snapToBit(1)}
+		>
+			1
+		</button>
+	</div>
+
 </div>
+
+<style>
+	.interaction-frame {
+		max-width: min(20.5rem, 94cqw, 100cqh);
+	}
+
+	.interaction-stage {
+		max-width: min(15.75rem, 64cqw, 100cqh);
+	}
+
+	@media (min-width: 640px) {
+		.interaction-frame {
+			max-width: min(38rem, 94cqw, 100cqh);
+		}
+
+		.interaction-stage {
+			max-width: min(30rem, 78cqw, 100cqh);
+		}
+	}
+</style>

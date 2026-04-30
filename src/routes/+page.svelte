@@ -1,49 +1,38 @@
 <script lang="ts">
-	import BitInteraction, { type BitValue } from '$lib/components/bit-interaction.svelte';
+	import AsciiMemoryInteraction from '$lib/components/ascii-memory-interaction.svelte';
+	import ChapterAdvanceKey from '$lib/components/chapter-advance-key.svelte';
 	import JourneyShell from '$lib/components/journey-shell.svelte';
 	import { buildJourneySteps } from '$lib/content/journey';
 
-	const EXPLANATION_BY_STATE = {
-		initial:
-			'A bit is the smallest unit of classical information. It can only end up as 0 or 1, so when you let go, the arrow snaps to one clear state.',
-		0: 'This bit is set to 0. A classical computer can read that exact value directly, because a bit stores one definite state at a time.',
-		1: 'This bit is set to 1. It is still one clear state, just the other allowed value. Classical bits do not stay halfway between answers.'
-	} as const;
-
-	let selectedBit = $state<BitValue | null>(null);
-	const journeySteps = $derived(buildJourneySteps('01', selectedBit === null ? 1 : 2));
-	const reservedExplanation = Object.values(EXPLANATION_BY_STATE).reduce((longest, current) =>
-		current.length > longest.length ? current : longest
-	);
-
-	const explanation = $derived.by(() => {
-		if (selectedBit === 0) {
-			return EXPLANATION_BY_STATE[0];
-		}
-
-		if (selectedBit === 1) {
-			return EXPLANATION_BY_STATE[1];
-		}
-
-		return EXPLANATION_BY_STATE.initial;
-	});
+	const EXPLANATION =
+		'Classical computers store text as numbers. ASCII assigns each character a number, and the computer stores that number as an 8-bit byte.';
+	const journeySteps = buildJourneySteps('01', 1, '02');
 </script>
 
 <svelte:head>
-	<title>Explain QC | What's a bit?</title>
+	<title>Explain QC | How computers store information</title>
 	<meta
 		name="description"
-		content="A clean first chapter that explains a classical bit with a draggable arrow that always resolves to 0 or 1."
+		content="An interactive ASCII chapter showing how classical computers store text as bytes."
 	/>
 </svelte:head>
 
-<JourneyShell title="What's a bit?" steps={journeySteps}>
-	<BitInteraction bind:value={selectedBit} />
+<JourneyShell
+	title="How computers store information"
+	subtitle="Tap any bit to change a byte and watch the character beside it update."
+	steps={journeySteps}
+>
+	<AsciiMemoryInteraction />
 
-	{#snippet footer()}
-		<div class="grid text-pretty">
-			<p class="invisible col-start-1 row-start-1" aria-hidden="true">{reservedExplanation}</p>
-			<p class="col-start-1 row-start-1">{explanation}</p>
-		</div>
+	{#snippet formula()}
+		8 bits = <span class="font-extrabold text-foreground">1 byte</span>
+	{/snippet}
+
+	{#snippet paragraph()}
+		<p class="text-pretty">{EXPLANATION}</p>
+	{/snippet}
+
+	{#snippet action()}
+		<ChapterAdvanceKey href="/bit" ariaLabel="Go to the classical bit chapter" />
 	{/snippet}
 </JourneyShell>
