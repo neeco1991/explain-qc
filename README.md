@@ -4,9 +4,12 @@ Interactive SvelteKit project for explaining the difference between classical an
 
 ## Current scope
 
-- `/` is the first lesson, `What's a classical bit?`
+- `/storage` is the first lesson, focused on how computers store information
 - The bit is represented by a draggable arrow that resolves to `0` or `1`
-- `/chapters` is the second lesson, focused on a qubit and an interactive Bloch sphere
+- `/bit` is the second lesson, `What's a classical bit?`
+- `/qubit` is the third lesson, focused on a qubit and an interactive Bloch sphere
+- `/measurement` is the fourth lesson, showing measurement collapse
+- `/bloch-sphere` is the fifth lesson, focused on the Bloch sphere view
 - A shared shell handles the page title, chapter progression, and footer explanation area
 - Each lesson has its own dedicated internal interaction instead of using a generic chapter engine
 - `three`, `Threlte`, and animation tooling are already installed for future 3D scenes
@@ -23,8 +26,11 @@ Interactive SvelteKit project for explaining the difference between classical an
 
 ## Project structure
 
-- `src/routes/+page.svelte`: first lesson, `What's a classical bit?`
-- `src/routes/chapters/+page.svelte`: second lesson, qubit
+- `src/routes/storage/+page.svelte`: first lesson, storage
+- `src/routes/bit/+page.svelte`: second lesson, bit
+- `src/routes/qubit/+page.svelte`: third lesson, qubit
+- `src/routes/measurement/+page.svelte`: fourth lesson, measurement
+- `src/routes/bloch-sphere/+page.svelte`: fifth lesson, bloch sphere
 - `src/lib/components/journey-shell.svelte`: shared page chrome
 - `src/lib/components/journey-progress.svelte`: chapter progression UI
 - `src/lib/components/bit-interaction.svelte`: first-page interaction

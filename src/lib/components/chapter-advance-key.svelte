@@ -1,16 +1,20 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { ArrowRight } from '@lucide/svelte';
+	import { ArrowRight, Atom } from '@lucide/svelte';
 	import { onDestroy } from 'svelte';
 
 	let {
 		href,
 		ariaLabel = 'Go to the next chapter',
+		label = '',
+		icon = 'arrow',
 		beforeNavigate
 	}: {
 		href: string;
 		ariaLabel?: string;
-		beforeNavigate?: () => void;
+		label?: string;
+		icon?: 'arrow' | 'atom';
+		beforeNavigate?: () => void | boolean;
 	} = $props();
 
 	const RAISED_CLASS =
@@ -36,12 +40,17 @@
 
 	function handleClick(event: MouseEvent) {
 		event.preventDefault();
-		beforeNavigate?.();
+		const shouldNavigate = beforeNavigate?.();
 		pressed = true;
 
 		if (timer) clearTimeout(timer);
 		timer = setTimeout(() => {
 			timer = null;
+			if (shouldNavigate === false) {
+				pressed = false;
+				return;
+			}
+
 			void goto(href);
 		}, 180);
 	}
@@ -50,7 +59,7 @@
 <a
 	{href}
 	aria-label={ariaLabel}
-	class={`flex h-14 min-w-20 items-center justify-center rounded-xl border-2 border-foreground/24 bg-white/78 px-5 text-foreground backdrop-blur transition-all sm:h-16 sm:min-w-24 ${
+	class={`flex h-14 min-w-20 items-center justify-center gap-2 rounded-xl border-2 border-foreground/24 bg-white/78 px-5 text-foreground backdrop-blur transition-all sm:h-16 sm:min-w-24 ${
 		pressed ? PRESSED_CLASS : RAISED_CLASS
 	}`}
 	onpointerdown={press}
@@ -59,5 +68,13 @@
 	onpointerleave={release}
 	onclick={handleClick}
 >
-	<ArrowRight class="size-6 sm:size-7" stroke-width={2.2} />
+	{#if icon === 'atom'}
+		<Atom class="size-5 shrink-0 sm:size-6" stroke-width={2.2} />
+	{:else if !label}
+		<ArrowRight class="size-6 shrink-0 sm:size-7" stroke-width={2.2} />
+	{/if}
+	{#if label}
+		<span class="whitespace-nowrap text-sm font-semibold sm:text-base">{label}</span>
+		<ArrowRight class="size-5 shrink-0 sm:size-6" stroke-width={2.2} />
+	{/if}
 </a>

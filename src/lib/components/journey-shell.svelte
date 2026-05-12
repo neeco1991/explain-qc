@@ -10,6 +10,7 @@
 		wide = false,
 		showAction = true,
 		children,
+		control,
 		formula,
 		paragraph,
 		action
@@ -20,6 +21,7 @@
 		wide?: boolean;
 		showAction?: boolean;
 		children?: Snippet;
+		control?: Snippet;
 		formula?: Snippet;
 		paragraph?: Snippet;
 		action?: Snippet;
@@ -50,6 +52,12 @@
 		>
 			{@render children?.()}
 		</section>
+
+		{#if control}
+			<section class="journey-shell__control" aria-label="Controls">
+				{@render control()}
+			</section>
+		{/if}
 
 		<section class="journey-shell__formula" aria-label="Formula">
 			{@render formula?.()}
@@ -84,17 +92,23 @@
 	}
 
 	.journey-shell__main {
+		position: relative;
 		display: grid;
 		min-height: 0;
 		flex: 1 1 0;
+		--shell-row-gap: 0.35rem;
+		--shell-formula-row: 2.75rem;
+		--shell-paragraph-row: 5.25rem;
+		--shell-action-row: 4rem;
 		grid-template-rows: 8.5rem minmax(0, 1fr) 2.75rem 5.25rem 4rem;
-		row-gap: 0.35rem;
+		row-gap: var(--shell-row-gap);
 		justify-items: center;
 		text-align: center;
 	}
 
 	.journey-shell__header,
 	.journey-shell__interactive,
+	.journey-shell__control,
 	.journey-shell__formula,
 	.journey-shell__paragraph,
 	.journey-shell__action {
@@ -132,6 +146,34 @@
 		align-items: center;
 		justify-content: center;
 		overflow: visible;
+	}
+
+	.journey-shell__interactive,
+	.journey-shell__formula,
+	.journey-shell :global(button),
+	.journey-shell :global([role='button']) {
+		-webkit-user-select: none;
+		user-select: none;
+	}
+
+	.journey-shell__control {
+		position: absolute;
+		right: 0;
+		bottom: calc(
+			var(--shell-formula-row) + var(--shell-paragraph-row) + var(--shell-action-row) +
+				(var(--shell-row-gap) * 2) + 0.75rem
+		);
+		left: 0;
+		z-index: 5;
+		display: flex;
+		pointer-events: none;
+		align-items: center;
+		justify-content: center;
+		overflow: visible;
+	}
+
+	.journey-shell__control :global(*) {
+		pointer-events: auto;
 	}
 
 	.journey-shell__formula {
@@ -175,8 +217,12 @@
 		}
 
 		.journey-shell__main {
+			--shell-row-gap: 0.65rem;
+			--shell-formula-row: 3.25rem;
+			--shell-paragraph-row: 5rem;
+			--shell-action-row: 4.75rem;
 			grid-template-rows: 7rem minmax(0, 1fr) 3.25rem 5rem 4.75rem;
-			row-gap: 0.65rem;
+			row-gap: var(--shell-row-gap);
 		}
 
 		.journey-shell__title {

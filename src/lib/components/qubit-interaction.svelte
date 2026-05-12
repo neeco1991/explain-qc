@@ -1,33 +1,54 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import {
+		DEFAULT_QUBIT_COEFFICIENTS,
+		DEFAULT_QUBIT_VECTOR,
+		QUBIT_RADIUS,
+		clampQubitVector,
+		coefficientsFromVector,
+		vectorForBasisState,
+		type QubitBasisState,
+		type QubitCoefficients,
+		type QubitVector
+	} from '$lib/qubit-state';
 	import gsap from 'gsap';
 	import { onDestroy, onMount } from 'svelte';
-
-	type BitValue = 0 | 1;
 
 	const TRANSITION_KEY = 'explain-qc.transition-to-qubit';
 	const TRANSITION_BIT_KEY = 'explain-qc.transition-bit';
 	const CENTER = 260;
-	const RADIUS = 198;
+	const RADIUS = QUBIT_RADIUS;
 	const DRAW_LENGTH = 1280;
 	const DRAW_DURATION = 1450;
 
-	let { direction = $bindable(100) }: { direction?: number } = $props();
+	let {
+		direction = $bindable(100),
+		coefficients = $bindable<QubitCoefficients>({ ...DEFAULT_QUBIT_COEFFICIENTS }),
+		vector = $bindable<QubitVector>({ ...DEFAULT_QUBIT_VECTOR }),
+		collapseTarget = null,
+		readonly = false
+	}: {
+		direction?: number;
+		coefficients?: QubitCoefficients;
+		vector?: QubitVector;
+		collapseTarget?: QubitBasisState | null;
+		readonly?: boolean;
+	} = $props();
 
 	let sphereSurface: SVGSVGElement | null = $state(null);
 	let dragHandle: SVGCircleElement | null = $state(null);
 	let activePointerId = $state<number | null>(null);
 	let dragging = $state(false);
 	let sphereReady = $state(false);
-	let vectorX = $state(0);
-	let vectorY = $state(-RADIUS);
+	let previousCollapseTarget = $state<QubitBasisState | null>(null);
 
-	const tipX = $derived(CENTER + vectorX);
-	const tipY = $derived(CENTER + vectorY);
-	const vectorLength = $derived(Math.hypot(vectorX, vectorY));
+	const tipX = $derived(CENTER + vector.x);
+	const tipY = $derived(CENTER + vector.y);
+	const vectorLength = $derived(Math.hypot(vector.x, vector.y));
 	const normalizedValue = $derived(vectorLength / RADIUS);
+	const currentCoefficients = $derived(coefficientsFromVector(vector));
 	const arrowHeadPoints = $derived.by(() => {
-		const angle = Math.atan2(vectorY, vectorX);
+		const angle = Math.atan2(vector.y, vector.x);
 		const backX = tipX - Math.cos(angle) * 22;
 		const backY = tipY - Math.sin(angle) * 22;
 		const wingX = Math.cos(angle + Math.PI / 2) * 10;
@@ -44,7 +65,7 @@
 		const incomingBit = sessionStorage.getItem(TRANSITION_BIT_KEY);
 
 		if (incomingBit === '0' || incomingBit === '1') {
-			setVectorToBit(Number(incomingBit) as BitValue, false);
+			setVectorToBit(Number(incomingBit) as QubitBasisState, false);
 		}
 
 		sessionStorage.removeItem(TRANSITION_KEY);
@@ -66,15 +87,24 @@
 
 	$effect(() => {
 		direction = Math.round(normalizedValue * 100);
+		coefficients = currentCoefficients;
+	});
+
+	$effect(() => {
+		if (collapseTarget === previousCollapseTarget) return;
+
+		previousCollapseTarget = collapseTarget;
+
+		if (collapseTarget === null) return;
+
+		setVectorToBit(collapseTarget);
 	});
 
 	function setVector(x: number, y: number, animate: boolean) {
-		const length = Math.hypot(x, y);
-		const scale = length > RADIUS ? RADIUS / length : 1;
-		const next = { x: x * scale, y: y * scale };
+		const next = clampQubitVector({ x, y });
 
 		if (animate) {
-			const tweenState = { x: vectorX, y: vectorY };
+			const tweenState = { x: vector.x, y: vector.y };
 
 			gsap.to(tweenState, {
 				x: next.x,
@@ -83,23 +113,23 @@
 				ease: 'power2.out',
 				overwrite: 'auto',
 				onUpdate() {
-					vectorX = tweenState.x;
-					vectorY = tweenState.y;
+					vector = { x: tweenState.x, y: tweenState.y };
 				}
 			});
 			return;
 		}
 
-		vectorX = next.x;
-		vectorY = next.y;
+		vector = next;
 	}
 
-	function setVectorToBit(bit: BitValue, animate = true) {
-		setVector(bit === 0 ? -RADIUS : RADIUS, 0, animate);
+	function setVectorToBit(bit: QubitBasisState, animate = true) {
+		const next = vectorForBasisState(bit);
+
+		setVector(next.x, next.y, animate);
 	}
 
 	function vectorFromPointer(clientX: number, clientY: number) {
-		if (!sphereSurface) return { x: vectorX, y: vectorY };
+		if (!sphereSurface) return vector;
 
 		const rect = sphereSurface.getBoundingClientRect();
 		const x = ((clientX - rect.left) / rect.width) * 520 - CENTER;
@@ -117,6 +147,8 @@
 	}
 
 	function beginDrag(event: PointerEvent) {
+		if (readonly) return;
+
 		event.preventDefault();
 		event.stopPropagation();
 		dragging = true;
@@ -135,7 +167,7 @@
 	}
 
 	function handlePointerMove(event: PointerEvent) {
-		if (!dragging || activePointerId !== event.pointerId) return;
+		if (readonly || !dragging || activePointerId !== event.pointerId) return;
 		event.preventDefault();
 
 		const vector = vectorFromPointer(event.clientX, event.clientY);
@@ -155,6 +187,8 @@
 	}
 
 	function handleHandleKeydown(event: KeyboardEvent) {
+		if (readonly) return;
+
 		const step = 18;
 
 		if (event.key === '0') {
@@ -171,22 +205,22 @@
 
 		if (event.key === 'ArrowLeft') {
 			event.preventDefault();
-			setVector(vectorX - step, vectorY, true);
+			setVector(vector.x - step, vector.y, true);
 		}
 
 		if (event.key === 'ArrowRight') {
 			event.preventDefault();
-			setVector(vectorX + step, vectorY, true);
+			setVector(vector.x + step, vector.y, true);
 		}
 
 		if (event.key === 'ArrowUp') {
 			event.preventDefault();
-			setVector(vectorX, vectorY - step, true);
+			setVector(vector.x, vector.y - step, true);
 		}
 
 		if (event.key === 'ArrowDown') {
 			event.preventDefault();
-			setVector(vectorX, vectorY + step, true);
+			setVector(vector.x, vector.y + step, true);
 		}
 	}
 </script>
@@ -195,9 +229,10 @@
 	<div class="flex w-full items-center justify-center gap-3 sm:gap-5">
 		<button
 			type="button"
-			class="shrink-0 cursor-pointer text-5xl font-semibold text-foreground transition-colors hover:text-foreground/72 sm:text-6xl"
-			onpointerdown={() => setVectorToBit(0)}
-			onclick={() => setVectorToBit(0)}
+			class={`shrink-0 cursor-pointer text-5xl font-semibold text-foreground transition-colors hover:text-foreground/72 sm:text-6xl ${readonly ? 'pointer-events-none opacity-60' : ''}`}
+			onpointerdown={() => !readonly && setVectorToBit(0)}
+			onclick={() => !readonly && setVectorToBit(0)}
+			disabled={readonly}
 			aria-label="Set qubit direction to 0"
 		>
 			0
@@ -329,9 +364,10 @@
 
 		<button
 			type="button"
-			class="shrink-0 cursor-pointer text-5xl font-semibold text-foreground transition-colors hover:text-foreground/72 sm:text-6xl"
-			onpointerdown={() => setVectorToBit(1)}
-			onclick={() => setVectorToBit(1)}
+			class={`shrink-0 cursor-pointer text-5xl font-semibold text-foreground transition-colors hover:text-foreground/72 sm:text-6xl ${readonly ? 'pointer-events-none opacity-60' : ''}`}
+			onpointerdown={() => !readonly && setVectorToBit(1)}
+			onclick={() => !readonly && setVectorToBit(1)}
+			disabled={readonly}
 			aria-label="Set qubit direction to 1"
 		>
 			1

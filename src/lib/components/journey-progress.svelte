@@ -10,7 +10,6 @@
 	let hasCentered = false;
 
 	const activeNumber = $derived(steps.find((step) => step.active)?.number);
-	const activeIndex = $derived(steps.findIndex((step) => step.active));
 
 	onMount(() => {
 		mounted = true;
@@ -68,8 +67,8 @@
 		});
 	}
 
-	function canGoBack(step: JourneyStep, index: number) {
-		return Boolean(step.href && step.unlocked && index < activeIndex);
+	function canNavigate(step: JourneyStep) {
+		return Boolean(step.href);
 	}
 
 	function keyClass(step: JourneyStep, interactive = false) {
@@ -110,11 +109,12 @@
 
 			{#each steps as step, index}
 				<div class="flex w-24 shrink-0 flex-col items-center text-center" use:setActiveItem={step.active}>
-					{#if canGoBack(step, index)}
+					{#if canNavigate(step)}
 						<a
 							href={step.href}
 							class="group flex flex-col items-center text-center"
-							aria-label={`Go back to chapter ${step.number}: ${step.label}`}
+							aria-current={step.active ? 'step' : undefined}
+							aria-label={`Go to chapter ${step.number}: ${step.label}`}
 						>
 							<span class={keyClass(step, true)}>
 								{step.number}

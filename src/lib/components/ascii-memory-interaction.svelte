@@ -1,5 +1,5 @@
 <script lang="ts">
-  const WORD = 'Hello';
+  const WORD = 'Qubit';
   const BYTE_SIZE = 8;
 
   type Bit = 0 | 1;
@@ -165,6 +165,8 @@
     border-radius: 0.46rem;
     font-size: 0.95rem;
     font-weight: 900;
+    color: var(--accent-foreground);
+    border-color: color-mix(in oklab, var(--accent-foreground) 40%, transparent);
   }
 
   @media (min-width: 640px) {
